@@ -13,7 +13,8 @@ const AdminPage: React.FC = () => {
     updateProductStock, 
     addProduct, 
     updateProduct, 
-    resetAllStock 
+    resetAllStock,
+    reloadProducts
   } = useProducts();
   
   const [email, setEmail] = useState('');
@@ -40,8 +41,7 @@ const AdminPage: React.FC = () => {
     price: 0,
     stock: 0,
     initialStock: 0,
-    imagen: '',
-    inStock: true
+    imagen: ''
   });
 
   const ADMIN_EMAILS = ['matiassosa@iresm.edu.ar'];
@@ -100,20 +100,11 @@ const AdminPage: React.FC = () => {
     if (window.confirm('¿Estás seguro de que quieres eliminar este producto?')) {
       try {
         await deleteProduct(id);
+        reloadProducts();
         alert('Producto eliminado exitosamente');
       } catch (e: any) {
         alert('Error al eliminar el producto: ' + e.message);
       }
-    }
-  };
-
-  // FUNCIÓN ACTUALIZADA PARA REPONER STOCK
-  const handleRestock = async (id: string, initialStock: number) => {
-    try {
-      await updateProductStock(id, initialStock);
-      alert(`Stock repuesto a ${initialStock} unidades`);
-    } catch (e: any) {
-      alert('Error al reponer el stock: ' + e.message);
     }
   };
 
@@ -126,8 +117,20 @@ const AdminPage: React.FC = () => {
     
     try {
       await updateProductStock(id, newStock);
+      reloadProducts();
     } catch (e: any) {
       alert('Error al actualizar el stock: ' + e.message);
+    }
+  };
+
+  // FUNCIÓN ACTUALIZADA PARA REPONER STOCK
+  const handleRestock = async (id: string, initialStock: number) => {
+    try {
+      await updateProductStock(id, initialStock);
+      reloadProducts();
+      alert(`Stock repuesto a ${initialStock} unidades`);
+    } catch (e: any) {
+      alert('Error al reponer el stock: ' + e.message);
     }
   };
 
@@ -141,21 +144,27 @@ const AdminPage: React.FC = () => {
       price: product.price,
       stock: product.stock || 0,
       initialStock: product.initialStock || 20,
-      imagen: product.imagen || '',
-      inStock: product.inStock !== undefined ? product.inStock : true
+      imagen: product.imagen || ''
     });
     setShowEditModal(true);
   };
 
-  // FUNCIÓN PARA ACTUALIZAR PRODUCTO
+  // FUNCIÓN PARA ACTUALIZAR PRODUCTO (ÚNICA VERSIÓN)
   const handleUpdateProduct = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingProduct) return;
     
     try {
       await updateProduct(editingProduct.id, {
-        ...editFormData
+        name: editFormData.name,
+        category: editFormData.category,
+        type: editFormData.type,
+        price: editFormData.price,
+        stock: editFormData.stock,
+        initialStock: editFormData.initialStock,
+        imagen: editFormData.imagen
       });
+      reloadProducts();
       alert(`Producto "${editFormData.name}" actualizado exitosamente!`);
       setShowEditModal(false);
       setEditingProduct(null);
@@ -188,6 +197,7 @@ const AdminPage: React.FC = () => {
       await addProduct({
         ...newProduct
       });
+      reloadProducts();
       
       // Resetear formulario
       setNewProduct({
@@ -212,6 +222,7 @@ const AdminPage: React.FC = () => {
     if (window.confirm('¿Estás seguro de que quieres reponer todo el stock a 20 unidades?')) {
       try {
         await resetAllStock();
+        reloadProducts();
         alert('Todo el stock ha sido repuesto exitosamente!');
       } catch (e: any) {
         alert('Error al reponer el stock: ' + e.message);
@@ -338,7 +349,7 @@ const AdminPage: React.FC = () => {
                       <tr key={product.id} style={{ borderBottom: '1px solid #eee' }}>
                         <td style={{ padding: '8px', textAlign: 'center' }}>
                           <img 
-                            src={product.imagen || (product.category === 'POCHOCLOS' ? '/images/Pochoclos-Salados.png' : '/images/Jugo-Multifruta.png')} 
+                            src={product.imagen || (product.category === 'POCHOCLOS' ? '/images/pochoclos-default.jpg' : '/images/bebida-default.jpg')} 
                             alt={product.name}
                             style={{
                               width: '50px',

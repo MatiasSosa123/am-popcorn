@@ -90,52 +90,49 @@ export const useProducts = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // FUNCIÓN PARA RECARGAR PRODUCTOS
+  const reloadProducts = () => {
+    try {
+      setLoading(true);
+      
+      // Intentar cargar desde localStorage
+      const savedProducts = localStorage.getItem('products');
+      const savedStock = localStorage.getItem('product-stock');
+      
+      if (savedProducts && savedStock) {
+        const parsedProducts = JSON.parse(savedProducts);
+        const stockData = JSON.parse(savedStock);
+        
+        const productsWithStock = parsedProducts.map((product: Product) => ({
+          ...product,
+          stock: stockData[product.id] || product.stock || 20,
+          initialStock: product.initialStock || 20,
+          inStock: (stockData[product.id] || product.stock || 20) > 0
+        }));
+        
+        setProducts(productsWithStock);
+      } else {
+        setProducts(initialProductsData);
+        localStorage.setItem('products', JSON.stringify(initialProductsData));
+        
+        const initialStockData: { [key: string]: number } = {};
+        initialProductsData.forEach(product => {
+          initialStockData[product.id] = 20;
+        });
+        localStorage.setItem('product-stock', JSON.stringify(initialStockData));
+      }
+      
+    } catch (err) {
+      setError('Error al cargar los productos');
+      console.error('Error loading products:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Cargar productos al inicializar
   useEffect(() => {
-    const loadProducts = () => {
-      try {
-        setLoading(true);
-        
-        // Intentar cargar desde localStorage
-        const savedProducts = localStorage.getItem('products');
-        const savedStock = localStorage.getItem('product-stock');
-        
-        if (savedProducts && savedStock) {
-          // Si hay datos guardados, usarlos
-          const parsedProducts = JSON.parse(savedProducts);
-          const stockData = JSON.parse(savedStock);
-          
-          const productsWithStock = parsedProducts.map((product: Product) => ({
-            ...product,
-            stock: stockData[product.id] || product.stock || 20,
-            initialStock: product.initialStock || 20,
-            inStock: (stockData[product.id] || product.stock || 20) > 0
-          }));
-          
-          setProducts(productsWithStock);
-        } else {
-          // Si no hay datos guardados, usar los datos iniciales con stock 20
-          setProducts(initialProductsData);
-          // Guardar en localStorage
-          localStorage.setItem('products', JSON.stringify(initialProductsData));
-          
-          // Inicializar stock en localStorage
-          const initialStockData: { [key: string]: number } = {};
-          initialProductsData.forEach(product => {
-            initialStockData[product.id] = 20;
-          });
-          localStorage.setItem('product-stock', JSON.stringify(initialStockData));
-        }
-        
-      } catch (err) {
-        setError('Error al cargar los productos');
-        console.error('Error loading products:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadProducts();
+    reloadProducts();
   }, []);
 
   // Guardar productos cuando cambien
@@ -265,6 +262,7 @@ export const useProducts = () => {
     addProduct,
     updateProduct,
     deleteProduct,
-    resetAllStock // Nueva función
+    resetAllStock,
+    reloadProducts // Nueva función exportada
   };
 };
