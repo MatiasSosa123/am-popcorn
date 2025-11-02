@@ -1,15 +1,15 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import App from './App.tsx';
-import { CartProvider } from './context/CartContext.tsx';
-import { AuthProvider } from './hooks/useAuth.tsx';
+import App from './App';
+import { CartProvider } from './context/CartContext';
+import DatabaseInitializer from './components/DatabaseInitializer';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <AuthProvider>
+    <DatabaseInitializer>
       <CartProvider>
         <App />
       </CartProvider>
-    </AuthProvider>
-  </React.StrictMode>,
+    </DatabaseInitializer>
+  </React.StrictMode>
 );
